@@ -1,0 +1,19 @@
+{
+  "name": "devtinder",
+  "version": "1.0.0",
+  "description": "Project for Node",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js"
+  },
+  "keywords": [
+    "nodejs",
+    "backend"
+  ],
+  "author": "Soumik C",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
