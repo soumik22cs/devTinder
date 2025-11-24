@@ -11,8 +11,22 @@ app.use("/admin/getAllData",(req, res) => {
 })
 
 app.use("/admin/deleteUser", (req, res) => {
-    console.log("Deleting a user");
-    res.send("User deleted");
+    try{
+        console.log("Deleting a user");
+        throw new Error ("dashdjksad");
+        res.send("User deleted");
+    }
+    catch(err) {
+         console.log(err);
+         res.status(500).send("Something went wrong!!")
+    }
+    
+})
+
+app.use("/", (err, req, res, next) => {
+    if(err) {
+        res.status(500).send("Something went wrong");
+    }
 })
 
 app.use("/user/data", authUser, (req, res) => {
