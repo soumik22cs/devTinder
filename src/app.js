@@ -1,44 +1,44 @@
 const express = require("express");
 const { authAdmin, authUser } = require("./middlewares/auth");
-
+const {connectDB} = require("./config/database");
+const User  = require("./models/user");
 const app = express();
 
-app.use("/admin", authAdmin);
+app.post("/signup", async (req, res) => {
 
-app.use("/admin/getAllData",(req, res) => {
-    console.log("Fetching all data");
-    res.send("All data fetched");
-})
+    //Creating a new instance of the model User and passing data
 
-app.use("/admin/deleteUser", (req, res) => {
-    try{
-        console.log("Deleting a user");
-        throw new Error ("dashdjksad");
-        res.send("User deleted");
-    }
-    catch(err) {
-         console.log(err);
-         res.status(500).send("Something went wrong!!")
-    }
+    const user = new User({
+        firstName :"Sudeshna",
+        lastName : "Bose",
+        emailId : "sudeshna@abc.com",
+        password : "octo123",
+        age : 21,
+        gender : "Female"
+    });
     
-})
-
-app.use("/", (err, req, res, next) => {
-    if(err) {
-        res.status(500).send("Something went wrong");
+    try{
+    await user.save();
+    res.send("User added successfully.")
+    } catch(err) {
+        res.status(400).save("Data could not be saved", err.message);
     }
+
+
 })
 
-app.use("/user/data", authUser, (req, res) => {
-    console.log("Getting user data");
-    res.send("User data fetched");
-})
+connectDB()
+    .then(() => {
+        console.log("Connection established");
+        app.listen(7777, () => {
+            console.log("Port 7777 is now in use")
+        });
+    })
+    .catch(() => {
+        console.log("Database connection failed");
+    })
 
-app.use("/user/login", (req, res) => {
-    console.log("User is trying to login.");
-    res.send("User logged in")
-})
 
-app.listen(7777, () => {
-    console.log("Port 7777 is now in use")
-});
+
+
+
