@@ -15,7 +15,7 @@ app.post("/signup", async (req, res) => {
         await user.save();
         res.send("User added successfully.")
     } catch(err) {
-        res.status(400).save("Data could not be saved", err.message);
+        res.status(400).send("Data could not be saved"+ err.message);
     }
 })
 
@@ -32,7 +32,7 @@ app.get("/user", async (req, res) => {
         }
     }
     catch(err) {
-        res.status(500).send("Something in the way", err.message);
+        res.status(500).send("Something in the way"+ err.message);
     }
 })
 
@@ -42,7 +42,7 @@ app.get("/feed", async (req, res) => {
         res.send(users);
     }
     catch(err) {
-        res.status(500).send("Something in the way", err.message);
+        res.status(500).send("Something in the way"+ err.message);
     }
 })
 
@@ -58,7 +58,7 @@ app.get("/userByID", async (req, res) => {
         }
     }
     catch(err) {
-        res.status(500).send("Something in the way", err.message);
+        res.status(500).send("Something in the way"+ err.message);
     }
 })
 
@@ -75,7 +75,7 @@ app.delete("/delete", async (req, res) => {
         }
     }
     catch(err) {
-        res.status(500).send("Something in the way", err.message);
+        res.status(500).send("Something in the way"+ err.message);
     }
 })
 
@@ -84,7 +84,9 @@ app.patch("/user", async (req, res) => {
     const data = req.body;
 
     try{
-        const user  = await User.findByIdAndUpdate(userId, data);
+        const user  = await User.findByIdAndUpdate(userId, data, {
+            runValidators: true,
+        });
         if(!user) {
             res.status(404).send("User not found");
         }
@@ -93,7 +95,7 @@ app.patch("/user", async (req, res) => {
         }
     }
     catch(err) {
-        res.status(500).send("Something in the way", err.message);
+        res.status(500).send("Something in the way"+ err.message);
     }
 })
 
