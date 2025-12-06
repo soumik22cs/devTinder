@@ -1,102 +1,80 @@
 const express = require("express");
-const { authAdmin, authUser } = require("./middlewares/auth");
+const { authUser } = require("./middlewares/auth");
 const {connectDB} = require("./config/database");
 const User  = require("./models/user");
 const user = require("./models/user");
 const app = express();
+const {validateSignUpUser} = require("./utils/validation");
+const bcrypt = require ("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookieParser());
+
+const loggedInUser ='';
 
 app.post("/signup", async (req, res) => {
 
     //Creating a new instance of the model User and passing data
-    const user = new User(req.body);
+    
     try{
+        validateSignUpUser(req);
+        const {firstName, lastName, emailId, password, age} = req.body;
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        const user = new User({
+            firstName, lastName, emailId, age, password: passwordHash
+        });
         await user.save();
         res.send("User added successfully.")
     } catch(err) {
-        res.status(400).send("Data could not be saved"+ err.message);
+        res.status(400).send("Data could not be saved "+ err.message);
     }
 })
 
-app.get("/user", async (req, res) => {
-
-    const userEmail = req.body.emailId;
+app.get("/profile", authUser, async (req, res) => {
     try{
-        const user = await User.find({emailId: userEmail});
-        if(user.length === 0) {
-            res.send("User does not exist");
-        }
-        else {
-            res.send(user);
-        }
+        res.send(req.user)
     }
     catch(err) {
-        res.status(500).send("Something in the way"+ err.message);
+        res.send("Error accessing "+ err.message);
     }
+
 })
 
-app.get("/feed", async (req, res) => {
-    try {
-        const users = await User.find();
-        res.send(users);
-    }
-    catch(err) {
-        res.status(500).send("Something in the way"+ err.message);
-    }
-})
-
-app.get("/userByID", async (req, res) => {
-
+app.post("/login", async (req, res) => {
     try{
-        const user = await User.findById('6925fed3ee84fc740bfd1805');
-        if(user.length === 0) {
-            res.send("User does not exist");
-        }
-        else {
-            res.send(user);
-        }
-    }
-    catch(err) {
-        res.status(500).send("Something in the way"+ err.message);
-    }
-})
+        const {emailId, password} = req.body;
+        const user = await User.findOne({emailId: emailId});
 
-app.delete("/delete", async (req, res) => {
-    try{
-        const userId = req.body.userId;
-        const user = await User.findByIdAndDelete(userId);
-        console.log(user)
         if(!user) {
-            res.status(404).send("No user found")
+            throw new Error("Invalid credentials");
+        }
+        const isPasswordValid = await user.checkPasswordValidity(password);
+        if(isPasswordValid) {
+
+            const token = await user.getJWT();
+
+            res.cookie("token", token)
+            res.send("Login successful");
         }
         else {
-            res.send("User found and deleted with email" + req.body.userId);
+            throw new Error("Invalid credentials");
         }
     }
     catch(err) {
-        res.status(500).send("Something in the way"+ err.message);
+         res.status(400).send("Invalid credentials");
     }
 })
 
-app.patch("/user", async (req, res) => {
-    const userId = req.body.userId;
-    const data = req.body;
+app.post("/sendConnectionRequest", authUser, async(req, res) => {
+    //conn logic
 
-    try{
-        const user  = await User.findByIdAndUpdate(userId, data, {
-            runValidators: true,
-        });
-        if(!user) {
-            res.status(404).send("User not found");
-        }
-        else {
-            res.send("User updated");
-        }
-    }
-    catch(err) {
-        res.status(500).send("Something in the way"+ err.message);
-    }
+    console.log(req.user)
+
+    res.send("Connection sent by "+ req.user.firstName)
 })
 
 connectDB()
