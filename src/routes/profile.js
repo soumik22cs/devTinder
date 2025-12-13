@@ -3,6 +3,8 @@ const { authUser } = require("../middlewares/auth");
 const {validateUserEditFields} = require("../utils/validation")
 
 const profileRouter = express.Router();
+const validator = require("validator");
+const bcrypt = require("bcrypt");
 
 profileRouter.get("/profile/view", authUser, async (req, res) => {
     try{
@@ -29,6 +31,23 @@ profileRouter.patch("/profile/edit", authUser, async (req,res) => {
     }
     catch(err) {
         res.send("Error updating user profile, "+ err.message);
+    }
+})
+
+profileRouter.patch("/profile/forgotPassword", authUser, async (req, res) => {
+    try{
+        const loggedInUser = req.user;
+        if(!validator.isStrongPassword(req.body.password)){
+                throw new Error("Weak password!!");
+        }
+        const passwordHash = await bcrypt.hash(req.body.password, 10);
+
+        loggedInUser.password = passwordHash;
+        await loggedInUser.save();
+        res.send("Password updated successfully")
+    }
+    catch(err) {
+        res.send("Error resetting password "+ err.message)
     }
 })
 
